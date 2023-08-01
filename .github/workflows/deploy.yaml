@@ -9,14 +9,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      # Build test version of React project
       - run: docker build -t mcnickly/react-test -f ./client/Dockerfile.dev ./client
+
+      # Run tests
       - run: docker run -e CI=true mcnickly/react-test npm test
+
+      # Build prod versions of all projects
       - run: docker build -t mcnickly/multi-client ./client
       - run: docker build -t mcnickly/multi-nginx ./nginx
       - run: docker build -t mcnickly/multi-server ./server
       - run: docker build -t mcnickly/multi-worker ./worker
- 
+
+      # Log in to the docker CLI
+      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      # Push all images to docker hub
+      - run: docker push mcnickly/multi-client
+      - run: docker push mcnickly/multi-nginx
+      - run: docker push mcnickly/multi-server
+      - run: docker push mcnickly/multi-worker
+
       # - name: Generate deployment package
       #   run: zip -r deploy.zip . -x '*.git*'
  
